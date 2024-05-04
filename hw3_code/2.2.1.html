@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+    <svg width="800" height="800" id="pie-chart"></svg>
+    <svg width="800" height="400" id="line-chart"></svg>
+    <svg width="800" height="400" id="chart"></svg>
+    <script>
+        var widthPie = 800;
+        var heightPie = 800;
+        var radiusPie = Math.min(widthPie, heightPie) / 2;
+        var svgPie = d3.select('#pie-chart')
+            .attr('width', widthPie)
+            .attr('height', heightPie)
+            .append('g')
+            .attr('transform', 'translate(' + widthPie / 2 + ',' + heightPie / 2 + ')');
+
+        d3.csv("auto-mpg.csv").then(function(data){
+            var carCounts = data.reduce(function(counts, item) {
+                counts[item["model-year"]] = (counts[item["model-year"]] || 0) + 1;
+                return counts;
+            }, {});
+            var totalObservations = Object.values(carCounts).reduce(function(sum, count) {
+                                    return sum + count;
+                                    }, 0);
+            var carPercentages = {};
+            for (var model in carCounts) {
+                var count = carCounts[model];
+                var percentage = (count / totalObservations * 100).toFixed(2);
+                carPercentages[model] = percentage;}
+                
+
+            var pie = d3.pie()
+                        .value(function(d) { return d.value; });
+            
+            var pieData = pie(Object.entries(carPercentages).map(function([model, percentage]) {
+                        return { model: model, value: percentage };
+                    }));
+
+            var arcs = svgPie.selectAll('arc')
+            .data(pieData)
+            .enter()
+            .append('g')
+            .attr('class', 'arc');
+            
+            var outerRadius = widthPie / 4;
+            var innerRadius = 0;
+            var arc = d3.arc()
+            .innerRadius(innerRadius)
+            .outerRadius(outerRadius);
+
+            var color = d3.scaleOrdinal(d3.schemePaired);
+
+            arcs.append('path')
+            .attr('d', arc)
+            .attr('fill', function(d, i) { return color(i); });
+
+            arcs.append('text')
+            .attr('transform', function(d) { return 'translate(' + arc.centroid(d) + ')'; })
+            .attr('text-anchor', 'middle')
+            .style('font-size', '10px')
+            .text(function(d) { return d.data.model + ' ' + d.data.value + '%'; });
+        });
+    </script>
+
+
+
+    <script>
+            // Set the dimensions and margins of the graph
+    var marginLine = { top: 50, right: 50, bottom: 50, left: 100 },
+        widthLine = 800 - marginLine.left - marginLine.right,
+        heightLine = 400 - marginLine.top - marginLine.bottom;
+
+    // Parse the date
+    d3.csv("auto-mpg.csv").then(function(data){
+        var carCounts = data.reduce(function(counts, item) {
+                var cylinders = parseInt(item["cylinders"]);
+                counts[item["model-year"]] = (counts[item["model-year"]] || 0) + cylinders;
+                return counts;
+            }, {});
+        var arrayOfEntries = Object.entries(carCounts);
+        // Set the ranges
+        var xScale = d3.scaleLinear()
+            .domain(d3.extent(arrayOfEntries, function(d) { return d[0]; }))
+            .range([0, widthLine]);
+
+        var yScale = d3.scaleLinear()
+            .domain([0, d3.max(arrayOfEntries, function(d) { return d[1]; })])
+            .range([heightLine, 0]);
+
+        // Define the line
+        var line = d3.line()
+        .x(function(d) { return xScale(d[0]); }) // Convert the x-value to a number
+        .y(function(d) { return yScale(d[1]); });
+
+        // Append the SVG object to the body of the page
+        var svgLine = d3.select("#line-chart")
+            .attr("width", widthLine + marginLine.left + marginLine.right)
+            .attr("height", heightLine + marginLine.top + marginLine.bottom)
+            .append("g")
+            .attr("transform", "translate(" + marginLine.left + "," + marginLine.top + ")");
+
+        // Add the line
+        svgLine.append("path")
+        .datum(arrayOfEntries)
+        .attr("class", "line")
+        .attr("d", line)
+        .attr("stroke", "blue")
+        .attr("fill", "transparent")
+
+        // Add the X Axis
+        svgLine.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", "translate(0," + heightLine + ")")
+        .call(d3.axisBottom(xScale));
+
+        // Add the Y Axis
+        svgLine.append("g")
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale));
+
+        // Add X axis label
+        svgLine.append("text")
+        .attr("class", "x-label")
+        .attr("text-anchor", "middle")
+        .attr("x", widthLine / 2)
+        .attr("y", heightLine + marginLine.bottom)
+        .text("Model Year");
+
+        // Add Y axis label
+        svgLine.append("text")
+        .attr("class", "y-label")
+        .attr("text-anchor", "middle")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -heightLine / 2)
+        .attr("y", -marginLine.left / 2)
+        .text("Cylinders");
+
+        // Add title
+        svgLine.append("text")
+        .attr("class", "title")
+        .attr("text-anchor", "middle")
+        .attr("x", widthLine / 2)
+        .attr("y", -marginLine.top / 2)
+        .text("Cylinders vs Model Year");
+
+        // Add gridlines for y-axis
+        svgLine.append("g")
+        .attr("class", "gridlines")
+        .call(d3.axisLeft(yScale).tickSize(-widthLine).tickFormat(""));
+
+        // Add gridlines for x-axis
+        svgLine.append("g")
+        .attr("class", "gridlines")
+        .attr("transform", "translate(0," + heightLine + ")")
+        .call(d3.axisBottom(xScale).tickSize(-heightLine).tickFormat(""));
+    });
+    </script>
+
+    <script>
+        var widthBar = 800;
+        var heightBar = 400;
+        var marginBar = {
+            top: 10,
+            bottom: 30,
+            left: 60,
+            right: 60
+        };
+        
+        var svgBar = d3.select('#chart')
+            .attr('width', widthBar + marginBar.left + marginBar.right)
+            .attr('height', heightBar + marginBar.top + marginBar.bottom)
+            .append('g')
+            .attr('transform', `translate(${marginBar.left}, ${marginBar.top})`);
+
+
+        d3.csv("auto-mpg.csv").then(function(data){
+        var histogram = d3.histogram()
+            .value(function(d) { return d.acceleration; })
+            // .domain(d3.extent(data, function(d) { return d.acceleration; }))
+            .domain([10,30])
+            .thresholds(10);
+
+            var bins = histogram(data)
+            console.log(bins);
+        //define x axis and y axis
+        const x = d3.scaleLinear()
+                    .domain([bins[0].x0, bins[bins.length - 1].x1])
+                    .range([marginBar.left, widthBar - marginBar.right]);
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(bins, (d) => d.length)])
+            .range([heightBar - marginBar.bottom, marginBar.top]);
+
+
+        //add rectangulars to the figure
+        svgBar.append("g")
+            .attr("fill", "steelblue")
+            .selectAll()
+            .data(bins)
+            .join("rect")
+            .attr("x", (d) => x(d.x0) + 1)
+            .attr("width", (d) => x(d.x1) - x(d.x0) - 1)
+            .attr("y", (d) => y(d.length))
+            .attr("height", (d) => y(0) - y(d.length));
+        
+        //add axis to the figure
+        svgBar.append("g")
+            .attr("transform", `translate(0,${heightBar - marginBar.bottom})`)
+            .call(d3.axisBottom(x).ticks(widthBar / 80).tickSizeOuter(0))
+            .call((g) => g.append("text")
+                .attr("x", widthBar)
+                .attr("y", marginBar.bottom - 4)
+                .attr("fill", "currentColor")
+                .attr("text-anchor", "end")
+                .text("acceleration →"));
+
+        svgBar.append("g")
+            .attr("transform", `translate(${marginBar.left},0)`)
+            .call(d3.axisLeft(y).ticks(heightBar / 40))
+            .call((g) => g.select(".domain").remove())
+            .call((g) => g.append("text")
+                .attr("x", -marginBar.left)
+                .attr("y", 10)
+                .attr("fill", "currentColor")
+                .attr("text-anchor", "start")
+                .text("↑ Frequency"));
+        });
+        
+
+       
+    </script>
+</body>

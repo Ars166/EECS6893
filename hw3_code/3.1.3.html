@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Les Misérables Character Co-occurrence</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="fisheye.js"></script>
+
+</head>
+<body>
+
+<svg width = "1200" height = "600" id="graph"></svg>
+<p>
+    Boulatruelle's group has the smallest number of people, with only one person.
+</p>
+<p>
+    The group dyed orange has the largest number of people, with fourteen people.
+</p>
+<p>
+    MotherPlutarch, Gribier, and Jondrette are all related to only one person.
+</p>
+<p>
+    Oldman is not connected with anyone.
+</p>
+<script>
+    d3.json("miserables.json").then(function(data) {
+
+    // Create svg
+    var svg = d3.select("#graph");
+
+    var width = +svg.attr("width");
+    var height = +svg.attr("height");
+
+
+        // Create simulation
+    var simulation = d3.forceSimulation(data.nodes)
+        .force("link", d3.forceLink(data.links).id(function(d) { return d.index; }))
+        .force("charge", d3.forceManyBody())
+        .force("center", d3.forceCenter(600, 300));
+
+    // Create links
+    var link = svg.append("g")
+        .selectAll("line")
+        .data(data.links)
+        .enter().append("line")
+        .attr("stroke", "#999");
+
+    var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // Create nodes
+    var node = svg.selectAll(".node")
+        .data(data.nodes)
+        .enter().append("circle")
+        .attr("class", "node")
+        .attr("r", 8)
+        .attr("fill", function(d) { return color(d.group); })
+        .call(d3.drag()
+        .on("start", dragstarted)
+        .on("drag", dragged)
+        .on("end", dragended));
+
+    // Add labels to nodes
+    var label = svg.selectAll(".label")
+        .data(data.nodes)
+        .enter().append("text")
+        .attr("class", "label")
+        .text(function(d) { return d.name; })
+        .attr("font-size", "10px")
+        .attr("dx", 12)
+        .attr("dy", 4);
+        
+    //update positions of nodes and links
+    function ticked() {
+        link
+        .attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+        node
+        .attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
+
+        label
+        .attr("x", function(d) { return d.x; })
+        .attr("y", function(d) { return d.y; });
+    }
+
+    // Start the simulation
+    simulation.on("tick", ticked);
+
+    // Drag functions
+    function dragstarted(d) {
+        if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+    }
+
+    function dragged(d) {
+        d.fx = d3.event.x;
+        d.fy = d3.event.y;
+    }
+
+    function dragended(d) {
+        if (!d3.event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+
+    var fisheye = d3.fisheye.circular()
+    .radius(200)
+    .distortion(2);
+    svg.on("mousemove", function() {
+    fisheye.focus(d3.mouse(this));
+
+    // Apply fisheye distortion to nodes
+    node.each(function(d) {
+        d.fisheye = fisheye(d);
+    });
+
+    // Update node positions
+    node.attr("cx", function(d) { return d.fisheye.x; })
+        .attr("cy", function(d) { return d.fisheye.y; });
+
+    // Update link positions
+    link.attr("x1", function(d) { return d.source.fisheye.x; })
+        .attr("y1", function(d) { return d.source.fisheye.y; })
+        .attr("x2", function(d) { return d.target.fisheye.x; })
+        .attr("y2", function(d) { return d.target.fisheye.y; });
+
+    // Update label positions
+    label.attr("x", function (d) { return d.fisheye.x; })
+        .attr("y", function (d) { return d.fisheye.y; });
+    });
+});
+</script>
+
+</body>
+</html>

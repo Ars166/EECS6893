@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<body>
+<script>
+	var data = ['big', 'data', 'assignment', 2, 'submission'];
+	var body=d3.select("body")
+		.selectAll("span")
+		.data(data)
+		.enter()
+		.append("span")
+		.text(function(d){return d +" ";})
+</script>
+</body>
+
+</html>

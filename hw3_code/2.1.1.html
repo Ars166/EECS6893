@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+
+    <!-- open CSV FILE
+    <input type="file" accept=".csv" id="open"/> -->
+    
+    <!-- GENERATE HTML TABLE -->
+    <table id="data-table"></table>
+
+    <script>
+
+        d3.csv("auto-mpg.csv").then(function(data) {
+            var table = "<table><thead><tr><th>mpg</th><th>cylinders</th><th>displacement</th><th>horsepower</th><th>weight</th><th>acceleration</th><th>model-year</th></tr></thead><tbody>";
+            for (var i = 0; i < Math.min(5, data.length); i++) {
+                table += "<tr><td>" + data[i].mpg + "</td><td>" + data[i].cylinders + "</td><td>" + data[i].displacement + "</td><td>" + data[i].horsepower + "</td><td>" + data[i].weight + "</td><td>" + data[i].acceleration + "</td><td>" + data[i]["model-year"] +"</td></tr>";
+            }
+            table += "</tbody></table>";
+
+            document.getElementById("data-table").innerHTML = table;
+        });
+
+    </script>
+
+</body>
+
+</html>

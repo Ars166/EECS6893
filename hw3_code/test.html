@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D3.js Histogram</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+<body>
+
+<div id="histogram"></div>
+
+<script>
+    // 设置SVG宽高
+    var svgWidth = 600;
+    var svgHeight = 400;
+    
+    // 在body中创建SVG元素
+    var svg = d3.select("#histogram")
+                .append("svg")
+                .attr("width", svgWidth)
+                .attr("height", svgHeight);
+    
+    // 加载CSV数据
+    d3.csv("https://github.com/vega/vega/blob/main/docs/data/seattleweather.csv").then(function(data) {
+        // 将'wind'列的值转换为数值类型
+        data.forEach(function(d) {
+            d.wind = +d.wind;
+        });
+        
+        // 创建直方图
+        var histogram = d3.histogram()
+            .value(function(d) { return d.wind; }) // 指定数值列
+            .domain([d3.min(data, function(d) { return d.wind; }), d3.max(data, function(d) { return d.wind; })]) // 指定数据范围
+            .thresholds(10); // 分箱数量
+        
+        var bins = histogram(data);
+        
+        // 定义x轴
+        var x = d3.scaleLinear()
+            .domain([d3.min(data, function(d) { return d.wind; }), d3.max(data, function(d) { return d.wind; })])
+            .range([0, svgWidth]);
+        
+        // 定义y轴
+        var y = d3.scaleLinear()
+            .domain([0, d3.max(bins, function(d) { return d.length; })])
+            .range([svgHeight, 0]);
+        
+        // 创建矩形条
+        svg.selectAll("rect")
+            .data(bins)
+            .enter()
+            .append("rect")
+            .attr("x", 1)
+            .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
+            .attr("width", function(d) { return x(d.x1) - x(d.x0) - 1; })
+            .attr("height", function(d) { return svgHeight - y(d.length); });
+        
+        // 添加x轴
+        svg.append("g")
+            .attr("transform", "translate(0," + svgHeight + ")")
+            .call(d3.axisBottom(x));
+        
+        // 添加y轴
+        svg.append("g")
+            .call(d3.axisLeft(y));
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Line Graph</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    /* Add some basic styles if needed */
+  </style>
+</head>
+<body>
+  <svg width="800" height="400" id="line-chart"></svg>
+  <script>
+        // Set the dimensions and margins of the graph
+    var margin = { top: 50, right: 50, bottom: 50, left: 100 },
+    width = 800 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+    // Parse the date
+    var parseDate = d3.timeParse("%Y-%m-%d");
+    d3.csv("seattle-weather.csv").then(function(data){
+        // Format the data
+        data.forEach(function(d) {
+        d.date = parseDate(d.date);
+        d.precipitation = +d.precipitation;
+        });
+
+        // Set the ranges
+        var xScale = d3.scaleTime().domain(d3.extent(data, function(d) { return d.date; })).range([0, width]);
+        var yScale = d3.scaleLinear().domain([0, d3.max(data, function(d) { return d.precipitation; })]).range([height, 0]);
+
+        // Define the line
+        var line = d3.line()
+        .x(function(d) { return xScale(d.date); })
+        .y(function(d) { return yScale(d.precipitation); });
+
+        // Append the SVG object to the body of the page
+        var svg = d3.select("#line-chart")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        // Add the line
+        svg.append("path")
+        .data([data])
+        .attr("class", "line")
+        .attr("d", line)
+        .attr("stroke", "black")
+        .attr("fill", "transparent");
+
+        // Add the X Axis
+        svg.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(xScale));
+
+        // Add the Y Axis
+        svg.append("g")
+        .attr("class", "y-axis")
+        .call(d3.axisLeft(yScale));
+
+        // Add X axis label
+        svg.append("text")
+        .attr("class", "x-label")
+        .attr("text-anchor", "middle")
+        .attr("x", width / 2)
+        .attr("y", height + margin.bottom)
+        .text("Date");
+
+        // Add Y axis label
+        svg.append("text")
+        .attr("class", "y-label")
+        .attr("text-anchor", "middle")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -margin.left / 2)
+        .text("Precipitation");
+
+        // Add title
+        svg.append("text")
+        .attr("class", "title")
+        .attr("text-anchor", "middle")
+        .attr("x", width / 2)
+        .attr("y", -margin.top / 2)
+        .text("Precipitation Trend");
+
+        // Add gridlines for y-axis
+        svg.append("g")
+        .attr("class", "gridlines")
+        .call(d3.axisLeft(yScale).tickSize(-width).tickFormat(""));
+
+        // Add gridlines for x-axis
+        svg.append("g")
+        .attr("class", "gridlines")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(xScale).tickSize(-height).tickFormat(""));
+    });
+  </script>
+</body>
+</html>

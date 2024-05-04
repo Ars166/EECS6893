@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seattle Weather Data Visualization</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+    <div id="chart"></div>
+    <script>
+        const width = 800
+        const height = 400
+        const margin = {
+            top: 10,
+            bottom: 30,
+            left: 60,
+            right: 60
+        }
+        
+        var svg = d3.select('#chart')
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${ margin.left }, ${ margin.top })`)    
+
+        d3.csv("seattle-weather.csv").then(function(data){
+            var histogram = d3.histogram()
+                .value(function(d) {return d.wind})
+                .domain([0,10])
+                .thresholds(20);
+
+            var bins = histogram(data)
+            console.log(bins);
+        //define x axis and y axis
+        const x = d3.scaleLinear()
+                    .domain([bins[0].x0, bins[bins.length - 1].x1])
+                    .range([margin.left, width - margin.right]);
+        const y = d3.scaleLinear()
+                    .domain([0, d3.max(bins, (d) => d.length)])
+                    .range([height - margin.bottom, margin.top]);
+
+
+        //add rectangulars to the figure
+        svg.append("g")
+            .attr("fill", "steelblue")
+            .selectAll()
+            .data(bins)
+            .join("rect")
+            .attr("x", (d) => x(d.x0) + 1)
+            .attr("width", (d) => x(d.x1) - x(d.x0) - 1)
+            .attr("y", (d) => y(d.length))
+            .attr("height", (d) => y(0) - y(d.length));
+        
+        //add axis to the figure
+        svg.append("g")
+            .attr("transform", `translate(0,${height - margin.bottom})`)
+            .call(d3.axisBottom(x).ticks(width / 80).tickSizeOuter(0))
+            .call((g) => g.append("text")
+                .attr("x", width)
+                .attr("y", margin.bottom - 4)
+                .attr("fill", "currentColor")
+                .attr("text-anchor", "end")
+                .text("wind →"));
+
+        svg.append("g")
+            .attr("transform", `translate(${margin.left},0)`)
+            .call(d3.axisLeft(y).ticks(height / 40))
+            .call((g) => g.select(".domain").remove())
+            .call((g) => g.append("text")
+                .attr("x", -margin.left)
+                .attr("y", 10)
+                .attr("fill", "currentColor")
+                .attr("text-anchor", "start")
+                .text("↑ Frequency"));
+        });
+        
+
+        
+    </script>
+</body>
+
+</html>

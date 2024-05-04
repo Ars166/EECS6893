@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Visualization</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+
+    <!-- open CSV FILE
+    <input type="file" accept=".csv" id="open"/> -->
+    
+    <!-- GENERATE HTML TABLE -->
+    <table id="data-table"></table>
+
+    <script>
+
+        d3.csv("auto-mpg.csv").then(function(data) {
+            var table = "<table><thead><tr><th>acceleration</th><th>count</th></tr></thead><tbody>";
+            var carCounts = data.reduce(function(counts, item) {
+                
+                counts[item["acceleration"]] = (counts[item["acceleration"]] || 0) + 1;
+                return counts;
+            }, {});
+            for (var acceleration in carCounts) {
+                var count = carCounts[acceleration];
+                table += "<tr><td>" + acceleration + "</td><td>" + count +"</td></tr>";}
+                
+            table += "</tbody></table>";
+
+            document.getElementById("data-table").innerHTML = table;
+        });
+
+    </script>
+
+</body>
+
+</html>

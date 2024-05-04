@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1.1.5_2</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+<p>D3 Tutorials </p>
+
+<script>
+    var myData = ['big', 'data', 'assignment', 2, 'submission'];
+
+        var p = d3.select("body")
+                  .selectAll("p")
+                  .data(myData)
+                  .text(function (d,i) {
+                        return d;
+                  });
+</script>
+</body>
+
+</html>

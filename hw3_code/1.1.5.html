@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>1.1.5</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+
+<body>
+  <script>
+    var data = ['big', 'data', 'assignment', 2, 'submission'];
+    var body = d3.select("body")
+      .selectAll("span")
+      .data(data)
+      .enter()
+      .append("span")
+      .text(function(d) {
+        return d + " ";
+      });
+  </script>
+</body>
+
+</html>
